@@ -16,6 +16,7 @@ The website files are at the repository root. In **Settings → Pages**, choose 
 - `styles.css`: responsive layout, colors, typography, and motion preferences.
 - `script.js`: project details, work filters, notebook rearrangement, and email copying.
 - `assets/`: portrait, favicon, social image, and locally hosted fonts.
+- `src/brain.js`: the interactive brain in the About section. The page loads the bundled copy in `assets/brain.js`; after editing, rebuild it with `npx esbuild src/brain.js --bundle --minify --format=esm --outfile=assets/brain.js` (needs `three` installed). Without JavaScript or WebGL, the region list in `index.html` shows as plain text instead.
 
 The project thumbnails are custom illustrations, rather than screenshots of the original projects. Project detail dialogs link to verified public sources. They intentionally avoid inventing project outcomes or unpublished internship details.
 
