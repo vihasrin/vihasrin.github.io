@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MirrorMix — Smart Mirror Prototype</title>
+<style>
+:root{--bg1:#f7f1ea;--bg2:#e4d8ea;--panel:#fffaf5;--ink:#2a2230;--mute:#7b6d82;--line:#e8dcea;--acc:#8a3fd1;--accink:#fff;--chip:#f3ebf5;--green:#1db954;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#2a2133;--bg2:#120e17;--panel:#1b1621;--ink:#f4ecf8;--mute:#a899b0;--line:#352c3e;--acc:#b983f5;--accink:#17111d;--chip:#2a2233;color-scheme:dark}}
+:root[data-theme="dark"]{--bg1:#2a2133;--bg2:#120e17;--panel:#1b1621;--ink:#f4ecf8;--mute:#a899b0;--line:#352c3e;--acc:#b983f5;--accink:#17111d;--chip:#2a2233;color-scheme:dark}
+html,body{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg2)}
+#app{display:flex;height:100%}
+#stage{flex:1;position:relative;min-width:0;background:radial-gradient(ellipse at 50% 40%,var(--bg1),var(--bg2))}
+#c{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.hint{position:absolute;left:16px;bottom:14px;font-size:12px;color:var(--mute)}
+.fab{position:absolute;top:14px;right:14px;display:flex;gap:6px}
+.fab button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer}
+#panel{width:400px;max-width:100%;overflow-y:auto;background:var(--panel);border-left:1px solid var(--line);padding:18px 18px 28px;box-sizing:border-box}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}h1 small{font-size:12px;font-weight:500;color:var(--mute);margin-left:6px}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:14px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:6px 11px;border-radius:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.tab.on{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.2);flex:none}.dot.n{border-style:dashed;background:transparent}
+#scan{width:100%;margin-top:18px;padding:13px;border:0;border-radius:14px;background:var(--acc);color:var(--accink);font-size:15px;font-weight:600;cursor:pointer}
+#scan:disabled{opacity:.55;cursor:default}
+.card{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--chip)}
+.vh{display:flex;gap:10px;align-items:center}.vh .sw{width:36px;height:36px;border-radius:50%;flex:none}
+.vh b{display:block;font-size:16px}.vh span{font-size:12px;color:var(--mute)}.vh em{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:var(--acc);white-space:nowrap}
+.mt{display:grid;grid-template-columns:54px 1fr;gap:6px 10px;align-items:center;margin-top:12px;font-size:12px;color:var(--mute)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}.bar u{display:block;height:100%;background:var(--acc);border-radius:3px;transition:width .8s}
+.why{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.why span{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
+.pn{margin-top:14px;font-weight:600;font-size:14px}.pn small{display:block;font-weight:400;font-size:11px;color:var(--mute);margin-top:2px}
+.tl{list-style:none;margin:8px 0 0;padding:0}
+.tl li{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:13px}
+.tl li.on{background:var(--panel)}.tl li i{font-style:normal;width:16px;font-size:11px;color:var(--mute);text-align:center}.tl li.on i{color:var(--green)}
+.tl li div{flex:1;min-width:0}.tl li b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tl li span{font-size:11px;color:var(--mute)}
+.pgw{height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden}.pgw u{display:block;height:100%;width:0;background:var(--green)}
+.row{display:flex;gap:8px;margin-top:12px}
+.row button{flex:1;border-radius:20px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.row button.g{background:var(--green);border-color:var(--green);color:#06210e}
+.note{font-size:11px;color:var(--mute);line-height:1.5;margin-top:14px}
+@media (max-width:760px){#app{flex-direction:column}#stage{flex:none;height:50%}#panel{width:100%;flex:1;border-left:0;border-top:1px solid var(--line)}}
+</style></head>
+<body>
+<div id="app">
+<div id="stage"><canvas id="c"></canvas><div class="hint">Drag to rotate · scroll to zoom</div>
+<div class="fab"><button id="face">Face close-up</button><button id="reset">Reset</button></div></div>
+<aside id="panel">
+<h1>MirrorMix<small>concept prototype</small></h1>
+<div class="lab">Quick looks</div><div class="chips" id="pre"></div>
+<div class="lab">Build your look</div>
+<div class="chips"><button class="chip tab" id="t0">Outfit</button><button class="chip tab" id="t1">Makeup</button></div>
+<div id="groups"></div>
+<button id="scan">Scan my look</button>
+<div id="res"></div>
+<p class="note">Concept only: the mirror’s camera scan, the vibe analysis and the Spotify save are simulated here. In a real build, the camera would read the outfit and makeup, and the mood targets above would seed a playlist. Track names are made up.</p>
+</aside></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const VIBES=[
+{n:"Clean Girl Sunday",s:"Clean Girl",c:0xf2c99a,e:.38,v:.62,d:.5,bpm:"90–108",g:"indie pop · soft R&B",tag:"Glowy, effortless, morning-light energy.",tr:[["Linen Mornings","Maple & Moss"],["Glow Season","Ava Lune"],["Slow Coffee Kind of Love","Noa Bell"],["Sunday Hair","The Quiet Pines"],["Honey Light","Mirabel"],["Barefoot in the Kitchen","Juno Hart"],["Matcha Weather","Pale Coast"],["Tucked In","Eden Row"]]},
+{n:"Y2K Pop Princess",s:"Y2K Pop",c:0xff7ac8,e:.86,v:.9,d:.84,bpm:"118–132",g:"dance pop · electropop",tag:"Gloss, glitter and flip-phone feelings.",tr:[["Glitter Gloss","Candy Static"],["Flip Phone Heart","Bubblegum Riot"],["Rhinestone Rush","Lola Zap"],["Butterfly Clips","Tiara Pop"],["Text Me Back","Neon Dolls"],["Sugar Rave","Kiki Volt"],["Chrome Lips","Hyperlove"],["Bedazzled","Mimi Sparks"]]},
+{n:"After-Dark Rockstar",s:"Rockstar",c:0xa457ff,e:.9,v:.35,d:.55,bpm:"100–140",g:"alt rock · dark pop",tag:"Smudged liner, leather, main-character stage lights.",tr:[["Velvet Static","Black Orchid Club"],["Eyeliner Anthem","Wolves in Silk"],["Leather Weather","Nova Hex"],["Midnight Amp","Cassidy Vale"],["Smudge","The Late Hours"],["Neon Gravel","Raven Cole"],["Boots on the Bar","Ember Kid"],["Nightshift Heart","Ivy & Iron"]]},
+{n:"Soft Romance",s:"Soft Romance",c:0xffa9c2,e:.3,v:.56,d:.4,bpm:"70–95",g:"dream pop · acoustic",tag:"Petals, pastel and slow-dance in the hallway.",tr:[["Petal Letters","Wren Calloway"],["Rosewater","Ellis & Dove"],["Slow Dance in the Hallway","Mabel Ray"],["Peach Skies","Lumen Fields"],["Held Gently","Odette Blue"],["Cardigan Weather","Fern Hollow"],["Love Notes in Pencil","Pia Lark"],["Tender","Clementine Wake"]]},
+{n:"Street Style Hype",s:"Street Hype",c:0x7fe07b,e:.78,v:.6,d:.82,bpm:"92–128",g:"hip-hop · alt R&B",tag:"Layered fits, sneakers, crosswalk-runway swagger.",tr:[["Cargo Pockets","Kid Lattice"],["Crosswalk Runway","Mono Marquee"],["Sneaker Drop","Dre Vantage"],["Wide Leg Walk","Zuri Flux"],["Concrete Bloom","Taj & The Stoops"],["Layered Up","Mx. Parallel"],["Corner Store Glow","Rue Vega"],["Fit Check","Big Zephyr"]]},
+{n:"Old Money Brunch",s:"Old Money",c:0xe4b657,e:.42,v:.5,d:.45,bpm:"80–104",g:"jazz pop · chamber pop",tag:"Cashmere, pearls and a very quiet terrace.",tr:[["Cashmere Sundays","Bianca Rowe"],["Marble Floors","The Ashford Trio"],["Linen & Lacquer","Camille Voss"],["Estate Sale","Harlow & Finch"],["Pearls at Noon","Odalys"],["Sunday Polo","Ivory Court"],["Tennis Whites","Cove & Crane"],["Golden Terrace","Margot Lane"]]}];
+const DUR=[192,168,215,181,177,204,189,162];
+const OPT={
+top:[["Black tank",0x1b1b1f,[0,1,3,0,2,0],{len:1,sl:0}],["White tee",0xf5f3ee,[3,1,0,1,1,2],{len:1,sl:1}],["Red knit",0xb3262e,[0,0,1,2,0,3],{len:1,sl:2}],["Sage cardigan",0x9caf88,[2,0,0,3,0,2],{len:1,sl:2}],["Denim shirt",0x6f8fb8,[1,0,0,0,3,1],{len:1,sl:2}],["Lilac crop",0xc3a6e6,[0,3,0,2,1,0],{len:.55,sl:1}]],
+bottom:[["Wide-leg denim",0x5c7ea6,[2,1,0,0,3,0],{sk:0}],["Leather pants",0x151518,[0,1,3,0,2,0],{sk:0,met:1}],["Pleated mini",0xd9a3c5,[0,3,1,2,0,1],{sk:1}],["Cargo green",0x5b6b3c,[0,1,0,0,3,0],{sk:0}],["Cream trousers",0xe7dcc6,[2,0,0,1,0,3],{sk:0}]],
+layer:[["None",null,[1,0,0,0,0,0]],["Black blazer",0x1d1d22,[0,0,2,0,1,2]],["Denim jacket",0x4f74a3,[0,1,0,0,3,0]],["Pink faux fur",0xf0a8c6,[0,2,1,2,0,0]],["Beige trench",0xc9a77c,[1,0,0,1,0,3]]],
+lips:[["Nude",0xc58b78,[3,0,0,2,0,2]],["Berry",0x8b1e4a,[0,0,2,1,0,2]],["Red",0xc1121f,[0,0,2,0,0,3]],["Gloss pink",0xf06a9b,[1,3,0,2,0,0],{gl:1}],["Plum",0x5a1f3d,[0,0,3,0,1,1]]],
+eyes:[["Natural",0xc9a08b,[3,0,0,1,0,1],{o:.35}],["Smoky",0x2b2024,[0,0,3,0,2,0],{o:.9}],["Glitter gold",0xd8a82a,[0,2,1,0,0,2],{o:.9}],["Blue pop",0x2e6fe0,[0,3,1,0,2,0],{o:.9}],["Soft pink",0xf0a5b5,[1,2,0,3,0,0],{o:.75}]],
+blush:[["None",null,[1,0,1,0,1,0]],["Peach",0xf2a07b,[2,0,0,2,0,1]],["Rose",0xe5758f,[1,1,0,3,0,1]],["Bold",0xdd3f6a,[0,3,0,0,1,0]]],
+liner:[["None",null,[1,0,0,1,0,1]],["Wing",0x111111,[0,1,2,0,1,2]]]};
+const LAB={top:"Top",bottom:"Bottom",layer:"Layer",lips:"Lips",eyes:"Eyes",blush:"Blush",liner:"Liner"},SUF={top:"",bottom:"",layer:"",lips:" lip",eyes:" eye",blush:" blush",liner:" liner"};
+const TABS=[["top","bottom","layer"],["lips","eyes","blush","liner"]];
+const PRE=[["Clean Girl",["White tee","Cream trousers","None","Nude","Natural","Peach","None"]],["Y2K Pop",["Lilac crop","Pleated mini","Pink faux fur","Gloss pink","Blue pop","Bold","None"]],["Rockstar",["Black tank","Leather pants","Black blazer","Plum","Smoky","None","Wing"]],["Soft Romance",["Sage cardigan","Pleated mini","None","Nude","Soft pink","Rose","None"]],["Street Style",["Black tank","Cargo green","Denim jacket","Berry","Smoky","None","None"]],["Old Money",["Red knit","Cream trousers","Beige trench","Red","Glitter gold","None","Wing"]]];
+const KEYS=Object.keys(OPT),MAXW=VIBES.map((_,j)=>KEYS.reduce((s,k)=>s+Math.max(...OPT[k].map(o=>o[2][j])),0));
+const L={top:1,bottom:4,layer:0,lips:0,eyes:0,blush:1,liner:0};
+let tab=0,R=null,SC={st:"idle",t:0},P={on:false,i:0,t:0},saved=false;
+const $=s=>document.querySelector(s),cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),ease=t=>t*t*(3-2*t),hex=c=>"#"+c.toString(16).padStart(6,"0");
+const nm=k=>OPT[k][L[k]][0];
+
+/* ---------- three.js ---------- */
+const cv=$("#c"),stage=$("#stage");
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(35,1,.1,100);
+scene.add(new THREE.HemisphereLight(0xffffff,0x7a6a80,1));
+const key=new THREE.DirectionalLight(0xffffff,.7);key.position.set(2,5,6);scene.add(key);
+const glow=new THREE.PointLight(0xffe9c9,.6,12);glow.position.set(0,1.8,2);scene.add(glow);
+const rig=new THREE.Group();scene.add(rig);
+const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.5,metalness:.1},o||{}));
+const BM=(c,o)=>new THREE.MeshBasicMaterial(Object.assign({color:c,side:THREE.DoubleSide},o||{}));
+const add=(g,m,x,y,z,p)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);(p||rig).add(o);return o};
+const Cy=(a,b,h,s)=>new THREE.CylinderGeometry(a,b,h,s||28),Bx=(w,h,d)=>new THREE.BoxGeometry(w,h,d),Sp=r=>new THREE.SphereGeometry(r,32,24);
+function arch(w,h,y0){const s=new THREE.Shape(),r=w/2;s.moveTo(-r,y0);s.lineTo(r,y0);s.lineTo(r,y0+h-r);s.absarc(0,y0+h-r,r,0,Math.PI,false);s.lineTo(-r,y0);return s}
+function ring(ow,oh,oy,iw,ih,iy,depth){const s=arch(ow,oh,oy);s.holes.push(new THREE.Path(arch(iw,ih,iy).getPoints(32)));return new THREE.ExtrudeGeometry(s,{depth:depth,bevelEnabled:false,curveSegments:32})}
+add(new THREE.CircleGeometry(2.6,64),M(0xd9cdbf,{roughness:.95}),0,-.01,.4).rotation.x=-Math.PI/2;
+const shadow=add(new THREE.CircleGeometry(1.2,48),BM(0x000000,{transparent:true,opacity:.14}),0,0,-.3);shadow.rotation.x=-Math.PI/2;shadow.scale.y=.6;
+const gold=M(0xc9a24b,{metalness:.8,roughness:.32});
+add(ring(1.84,3.34,0,1.56,3.06,.12,.1),gold,0,0,-.05);
+const ledM=new THREE.MeshBasicMaterial({color:0xffe9c9});
+add(ring(1.6,3.1,.1,1.56,3.06,.12,.02),ledM,0,0,.04);
+const g0=document.createElement("canvas");g0.width=4;g0.height=256;{const g=g0.getContext("2d"),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,"#cfd8e3");gr.addColorStop(1,"#98a4b4");g.fillStyle=gr;g.fillRect(0,0,4,256)}
+function glassGeo(){const g=new THREE.ShapeGeometry(arch(1.56,3.06,.12),32),p=g.attributes.position,u=g.attributes.uv;for(let i=0;i<p.count;i++)u.setXY(i,(p.getX(i)+.78)/1.56,(p.getY(i)-.12)/3.06);return g}
+add(glassGeo(),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(g0)}),0,0,0);
+const ov=document.createElement("canvas");ov.width=512;ov.height=1004;
+const otex=new THREE.CanvasTexture(ov);otex.minFilter=THREE.LinearFilter;otex.generateMipmaps=false;
+add(glassGeo(),new THREE.MeshBasicMaterial({map:otex,transparent:true}),0,0,.012);
+const leg=add(Bx(.08,2.55,.05),gold,0,1.2,-.47);leg.rotation.x=.344;
+[-.55,.55].forEach(x=>add(Bx(.08,.05,.95),gold,x,.025,-.1));
+// figure ("your reflection")
+const fig=new THREE.Group();fig.position.set(0,.2,-.16);fig.scale.setScalar(1.2);rig.add(fig);
+const skin=M(0xe8b99a,{roughness:.6}),topM=M(0xffffff,{roughness:.8}),botM=M(0x5c7ea6,{roughness:.7}),layM=M(0x1d1d22,{roughness:.7}),hairM=M(0x2a1d17,{roughness:.6}),shoeM=M(0x222226);
+const F=(g,m,x,y,z)=>add(g,m,x,y,z,fig);
+[-1,1].forEach(s=>{F(Cy(.065,.055,.95),skin,s*.11,.475,0);F(Bx(.14,.07,.24),shoeM,s*.11,.035,.04)});
+const pL=F(Cy(.1,.15,.95),botM,-.11,.475,0),pR=F(Cy(.1,.15,.95),botM,.11,.475,0),skirt=F(Cy(.2,.34,.5,32),botM,0,.72,0);F(Cy(.2,.21,.1),botM,0,.97,0);
+F(Cy(.21,.16,.75),skin,0,1.32,0);const topT=F(Cy(.225,.175,.75),topM,0,1.32,0);
+const coat=F(Cy(.265,.285,.95,32),layM,0,1.225,0),strip=F(new THREE.PlaneGeometry(.13,.8),topM,0,1.32,.28);
+F(Cy(.055,.06,.14),skin,0,1.77,0);
+const head=F(Sp(.17),skin,0,1.97,0);head.scale.y=1.15;
+F(Sp(.185),hairM,0,1.99,-.05).scale.y=1.1;F(Sp(.2),hairM,0,1.8,-.1).scale.set(1,1.7,.65);
+const sleeves=[];[-1,1].forEach(s=>{const a=new THREE.Group();a.position.set(s*.3,1.66,0);a.rotation.z=s*.08;fig.add(a);
+ add(Cy(.05,.045,.72),skin,0,-.36,0,a);add(Sp(.05),skin,0,-.76,0,a);sleeves.push(add(Cy(.065,.06,1),topM,0,-.37,0,a))});
+[-1,1].forEach(s=>{F(Sp(.02),M(0x1a1010),s*.065,2,.155);const b=F(Bx(.07,.012,.01),hairM,s*.065,2.085,.14);b.rotation.z=s*.12});
+F(Sp(.02),M(0xd9a584),0,1.945,.168);
+const shM=BM(0x2b2024,{transparent:true}),blM=BM(0xf2a07b,{transparent:true,opacity:.5}),lipM=BM(0xc58b78),lnM=BM(0x111111);
+const shd=[],bls=[],wing=[];
+[-1,1].forEach(s=>{const e=F(new THREE.CircleGeometry(.05,24),shM,s*.065,2.04,.152);e.scale.y=.55;e.rotation.y=s*.12;shd.push(e);
+ const b=F(new THREE.CircleGeometry(.05,24),blM,s*.11,1.925,.13);b.rotation.y=s*.5;bls.push(b);
+ const w=F(new THREE.PlaneGeometry(.075,.009),lnM,s*.1,2.018,.135);w.rotation.set(0,s*.55,s*.35);wing.push(w)});
+const lips=F(new THREE.CircleGeometry(.055,24),lipM,0,1.885,.158);lips.scale.y=.38;
+const gloss=F(new THREE.CircleGeometry(.012,12),BM(0xffffff,{transparent:true,opacity:.85}),.015,1.89,.16);
+function apply(){const t=OPT.top[L.top],b=OPT.bottom[L.bottom],y=OPT.layer[L.layer],li=OPT.lips[L.lips],ey=OPT.eyes[L.eyes],bl=OPT.blush[L.blush],ln=OPT.liner[L.liner];
+ topM.color.setHex(t[1]);topT.scale.y=t[3].len;topT.position.y=1.695-.375*t[3].len;
+ botM.color.setHex(b[1]);botM.metalness=b[3].met?.5:.05;botM.roughness=b[3].met?.3:.75;
+ skirt.visible=!!b[3].sk;pL.visible=pR.visible=!b[3].sk;
+ const hl=y[1]!==null;coat.visible=strip.visible=hl;if(hl)layM.color.setHex(y[1]);
+ sleeves.forEach(s=>{const len=hl?.74:[0,.28,.72][t[3].sl];s.visible=len>0;s.scale.y=Math.max(len,.01);s.position.y=-len/2;s.material=hl?layM:topM});
+ lipM.color.setHex(li[1]);gloss.visible=!!(li[3]&&li[3].gl);
+ shM.color.setHex(ey[1]);shM.opacity=ey[3].o;
+ bls.forEach(b=>b.visible=bl[1]!==null);if(bl[1]!==null)blM.color.setHex(bl[1]);
+ wing.forEach(w=>w.visible=ln[1]!==null)}
+
+/* ---------- mirror overlay (UI drawn on the glass) ---------- */
+const PX=x=>256+x*328,PY=y=>(1-(y-.12)/3.06)*1004;
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function wrap(g,t,w){const out=[];let cur="";t.split(" ").forEach(word=>{const n=cur?cur+" "+word:word;if(g.measureText(n).width>w&&cur){out.push(cur);cur=word}else cur=n});out.push(cur);return out}
+function tag(g,label,text,y,a,col){if(a<=0)return;g.globalAlpha=cl(a);g.font="600 14px system-ui,sans-serif";const ls=wrap(g,text,138),h=26+ls.length*17;
+ g.fillStyle="rgba(12,10,16,.62)";rr(g,350,y-h/2,150,h,10);g.fill();g.strokeStyle=col;g.lineWidth=1.5;g.beginPath();g.moveTo(330,y);g.lineTo(350,y);g.stroke();
+ g.fillStyle=col;g.font="700 10px system-ui,sans-serif";g.textAlign="left";g.fillText(label,360,y-h/2+14);g.fillStyle="#fff";g.font="600 14px system-ui,sans-serif";ls.forEach((l,i)=>g.fillText(l,360,y-h/2+31+i*17));g.globalAlpha=1}
+function overlay(time){const g=ov.getContext("2d"),W=512,H=1004;g.clearRect(0,0,W,H);g.textBaseline="middle";g.textAlign="center";
+ const sg=g.createLinearGradient(0,0,W,H);[[0,0],[.35,.16],[.5,0],[.7,.1],[.8,0]].forEach(s=>sg.addColorStop(s[0],"rgba(255,255,255,"+s[1]+")"));g.fillStyle=sg;g.fillRect(0,0,W,H);
+ const done=SC.st==="done",scn=SC.st==="scanning",col=done?hex(VIBES[R.a].c):"#7fdcff";
+ g.strokeStyle=scn||done?col:"rgba(255,255,255,.7)";g.lineWidth=3;
+ [[70,150,1,1],[442,150,-1,1],[70,960,1,-1],[442,960,-1,-1]].forEach(c=>{g.beginPath();g.moveTo(c[0],c[1]+c[3]*34);g.lineTo(c[0],c[1]);g.lineTo(c[0]+c[2]*34,c[1]);g.stroke()});
+ if(scn||done){g.setLineDash([6,6]);g.lineDashOffset=-time*20;g.lineWidth=2;g.beginPath();g.arc(256,PY(2.564),72,0,7);g.stroke();g.setLineDash([])}
+ const sy=130+SC.t*830;
+ if(scn){const gr=g.createLinearGradient(0,sy-70,0,sy);gr.addColorStop(0,"rgba(127,220,255,0)");gr.addColorStop(1,"rgba(127,220,255,.4)");g.fillStyle=gr;g.fillRect(70,sy-70,372,70);g.fillStyle="#d8f6ff";g.fillRect(70,sy-1,372,3)}
+ const rev=y=>done?1:scn?(sy-y)/60:0;
+ const mk=nm("lips")+" lip · "+nm("eyes")+" eye"+(L.liner?" · Wing":"")+(L.blush?" · "+nm("blush")+" blush":"");
+ tag(g,"MAKEUP",mk,PY(2.45),rev(200),col);
+ tag(g,"FIT",nm("top")+(L.layer?" + "+nm("layer"):""),PY(1.7),rev(420),col);
+ tag(g,"BOTTOM",nm("bottom"),PY(.8),rev(770),col);
+ g.fillStyle="#fff";g.shadowColor="rgba(0,0,0,.5)";g.shadowBlur=6;
+ if(done){g.fillStyle=col;g.font="700 24px system-ui,sans-serif";g.fillText(VIBES[R.a].n,256,52);g.fillStyle="#fff";g.font="600 13px system-ui,sans-serif";g.fillText(R.pct+"% match"+(R.hint?" · hint of "+VIBES[R.b].s:""),256,80)}
+ else{g.font="700 22px system-ui,sans-serif";g.fillText(scn?"Scanning…":"Ready to scan",256,52);g.font="13px system-ui,sans-serif";g.fillText(scn?"Reading outfit and makeup":"Pick a look, then tap Scan",256,80)}
+ g.shadowBlur=0;
+ if(P.on&&R){const t=R.tracks[P.i];g.fillStyle="rgba(12,10,16,.62)";rr(g,60,918,392,46,14);g.fill();g.fillStyle="#1db954";for(let i=0;i<5;i++){const h=5+16*Math.abs(Math.sin(time*5+i*1.4));g.fillRect(78+i*7,941-h/2,4,h)}
+  g.fillStyle="#fff";g.font="600 14px system-ui,sans-serif";g.textAlign="left";g.fillText("♪ "+t[0]+" · "+t[1],124,941,320)}
+ otex.needsUpdate=true}
+
+/* ---------- loop ---------- */
+let rotY=0,zoom=1,auto=true,foc=0,focT=0,time=0,last=performance.now();const ledBase=new THREE.Color(0xffe9c9),ledT=new THREE.Color(0xffe9c9);
+function setCam(){const a=camera.aspect,d0=8.4*Math.max(1,.75/a)*zoom,d1=3.4*Math.max(1,.7/a)*zoom,d=d0+(d1-d0)*foc,ly=1.7+.8*foc;camera.position.set(0,ly+.35,d);camera.lookAt(0,ly,0)}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();setCam()}
+new ResizeObserver(resize).observe(stage);
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;time+=dt;
+ if(SC.st==="scanning"){SC.t+=dt/3.4;if(SC.t>=1){SC.t=1;SC.st="done";R=compute();ledT.setHex(VIBES[R.a].c);P={on:false,i:0,t:0};saved=false;draw()}}
+ if(P.on&&R){P.t+=dt;if(P.t>=R.tracks[P.i][2]){P.i=(P.i+1)%R.tracks.length;P.t=0;draw()}const pg=$("#pg");if(pg)pg.style.width=100*P.t/R.tracks[P.i][2]+"%"}
+ foc+=(focT-foc)*Math.min(1,dt*4);setCam();
+ ledBase.lerp(ledT,Math.min(1,dt*3));const beat=P.on?.6+.4*Math.sin(time*6):1;ledM.color.copy(ledBase).multiplyScalar(beat);glow.color.copy(ledBase);glow.intensity=.5+.4*(P.on?.5+.5*Math.sin(time*6):.3);
+ if(auto)rotY=Math.sin(time*.35)*(.42-.3*foc);rig.rotation.y=rotY;
+ overlay(time);renderer.render(scene,camera)}
+let drag=null;
+cv.addEventListener("pointerdown",e=>{drag={x:e.clientX};cv.setPointerCapture(e.pointerId);auto=false});
+cv.addEventListener("pointermove",e=>{if(!drag)return;rotY=cl(rotY+(e.clientX-drag.x)*.008,-1.2,1.2);drag={x:e.clientX}});
+cv.addEventListener("pointerup",()=>drag=null);
+cv.addEventListener("wheel",e=>{e.preventDefault();zoom=cl(zoom*(1+e.deltaY*.001),.6,1.4)},{passive:false});
+$("#reset").onclick=()=>{zoom=1;auto=true;focT=0;$("#face").textContent="Face close-up"};
+$("#face").onclick=()=>{focT=focT?0:1;$("#face").textContent=focT?"Full view":"Face close-up"};
+
+/* ---------- vibe engine ---------- */
+function compute(){const sc=VIBES.map(()=>0);KEYS.forEach(k=>OPT[k][L[k]][2].forEach((w,j)=>sc[j]+=w));
+ const o=sc.map((s,j)=>[s,j]).sort((p,q)=>q[0]-p[0]),a=o[0][1],b=o[1][1],hint=o[1][0]>=o[0][0]*.7&&o[1][0]>0;
+ const why=KEYS.map(k=>{const op=OPT[k][L[k]];return[op[0]+SUF[k],op[2][a],op[0]==="None"]}).filter(x=>x[1]>0&&!x[2]).sort((p,q)=>q[1]-p[1]).slice(0,3);
+ const A=VIBES[a],B=VIBES[b],w=hint?.7:1,mix=f=>A[f]*w+(hint?B[f]*.3:0);
+ let tr;if(hint){const x=A.tr,y=B.tr;tr=[x[0],x[1],y[0],x[2],x[3],y[1],x[4],y[2]]}else tr=A.tr.slice();
+ return{a,b,hint,pct:Math.min(99,Math.round(100*sc[a]/MAXW[a])),why,e:mix("e"),v:mix("v"),d:mix("d"),tracks:tr.map((t,i)=>[t[0],t[1],DUR[i]])}}
+
+/* ---------- panel ---------- */
+const fmt=s=>Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+function change(){SC={st:"idle",t:0};R=null;P={on:false,i:0,t:0};ledT.setHex(0xffe9c9);apply();draw()}
+function draw(){
+ $("#pre").innerHTML=PRE.map((p,i)=>`<button class="chip" data-i="${i}">${p[0]}</button>`).join("");
+ $("#pre").onclick=e=>{const b=e.target.closest("button");if(!b)return;PRE[+b.dataset.i][1].forEach((n,j)=>{const k=KEYS[j];L[k]=OPT[k].findIndex(o=>o[0]===n)});change()};
+ [0,1].forEach(i=>{$("#t"+i).classList.toggle("on",tab===i);$("#t"+i).onclick=()=>{tab=i;draw()}});
+ $("#groups").innerHTML=TABS[tab].map(k=>`<div class="lab">${LAB[k]}</div><div class="chips">${OPT[k].map((o,i)=>`<button class="chip ${L[k]===i?"on":""}" data-k="${k}" data-i="${i}"><i class="dot ${o[1]===null?"n":""}" style="background:${o[1]===null?"":hex(o[1])}"></i>${o[0]}</button>`).join("")}</div>`).join("");
+ $("#groups").onclick=e=>{const b=e.target.closest("button");if(!b)return;L[b.dataset.k]=+b.dataset.i;change()};
+ $("#scan").disabled=SC.st==="scanning";$("#scan").textContent=SC.st==="scanning"?"Scanning…":R?"Scan again":"Scan my look";
+ const r=$("#res");if(!R){r.innerHTML="";return}
+ const A=VIBES[R.a],B=VIBES[R.b],name=R.hint?A.s+" × "+B.s:A.s;
+ r.innerHTML=`<div class="card"><div class="vh"><i class="sw" style="background:${hex(A.c)}"></i><div><b>${A.n}</b><span>${A.tag}</span></div><em>${R.pct}% match</em></div>
+ <div class="mt"><label>Energy</label><div class="bar"><u style="width:${R.e*100}%"></u></div><label>Mood</label><div class="bar"><u style="width:${R.v*100}%"></u></div><label>Dance</label><div class="bar"><u style="width:${R.d*100}%"></u></div></div>
+ <div class="why">${R.why.map(w=>`<span>${w[0]} · +${w[1]}</span>`).join("")}${R.hint?`<span>hint of ${B.n}</span>`:""}</div>
+ <div class="pn">Mirror Mix: ${name}<small>Mood targets: ${A.bpm} BPM · ${A.g}</small></div>
+ <ul class="tl">${R.tracks.map((t,i)=>`<li class="${P.on&&P.i===i?"on":""}" data-i="${i}"><i>${P.on&&P.i===i?"♪":i+1}</i><div><b>${t[0]}</b><span>${t[1]}</span></div><span>${fmt(t[2])}</span></li>`).join("")}</ul>
+ <div class="pgw"><u id="pg"></u></div>
+ <div class="row"><button class="g" id="pp">${P.on?"Pause":"Play on mirror"}</button><button id="sv">${saved?"Saved ✓":"Save to Spotify"}</button></div></div>`;
+ r.querySelector(".tl").onclick=e=>{const li=e.target.closest("li");if(!li)return;P={on:true,i:+li.dataset.i,t:0};draw()};
+ $("#pp").onclick=()=>{P.on=!P.on;draw()};$("#sv").onclick=()=>{saved=!saved;draw()}}
+$("#scan").onclick=()=>{SC={st:"scanning",t:0};R=null;P={on:false,i:0,t:0};ledT.setHex(0x7fdcff);draw()};
+apply();draw();resize();requestAnimationFrame(frame);
+</script></body></html>
